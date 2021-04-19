@@ -57,11 +57,21 @@ const Flashcard = styled.div`
 	font-size: 42px;
 `;
 
+const FlashcardDiv = styled.div`
+	grid-area: flashcard;
+	cursor: pointer;
+`;
+
+// const FlashcardContainer = styled(ReactCardFlip)`
+// 	grid-area: flashcard;
+// `;
+
 const Header = styled.div`
 	display: flex;
 	flex-direction: row;
 	height: 100px;
 	width: auto;
+	grid-area: header;
 `;
 
 const Title = styled.div`
@@ -91,6 +101,15 @@ const AddButton = styled.button``;
 
 const PageContainer = styled.div`
 	margin: 0px 48px;
+	display: grid;
+	gap: 1rem;
+	grid-template-areas:
+		"header header header header header header header"
+		". . flashcard flashcard flashcard . ."
+		". . actions actions actions . ."
+		"phrases phrases phrases phrases phrases phrases phrases";
+	grid-template-rows: 120px auto 50px auto;
+	grid-template-columns: repeat(7, 1fr);
 `;
 
 const FlashcardBack = styled(Flashcard)`
@@ -106,13 +125,18 @@ const IconContainer = styled.div`
 	margin: auto;
 `;
 
+const PhraseListContainer = styled.div`
+	grid-area: phrases;
+	display: grid;
+	gap: 0.5rem;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 0.5fr));
+`;
+
 const Phrase = styled.div`
-	margin: auto;
-	max-width: 700px;
-	font-size: 24px;
-	border-bottom: 3px solid coral;
-	padding-bottom: 20px;
-	margin-bottom: 20px;
+	font-size: 18px;
+	border: 2px solid rgba(255, 160, 122, 0.479);
+	border-radius: 8px;
+	cursor: pointer;
 `;
 
 const StyledSelect = styled(Select)`
@@ -248,18 +272,23 @@ function Page() {
 					<User />
 				</IconContainer>
 			</Header>
-			<ReactCardFlip isFlipped={!flashcardFront} flipDirection="vertical">
-				<Flashcard onClick={(e) => handleFlashCardClick(e)}>
-					{flashcardPhrase.hungarian}
-				</Flashcard>
+			<FlashcardDiv>
+				<ReactCardFlip
+					isFlipped={!flashcardFront}
+					flipDirection="vertical"
+				>
+					<Flashcard onClick={(e) => handleFlashCardClick(e)}>
+						{flashcardPhrase.hungarian}
+					</Flashcard>
 
-				<FlashcardBack onClick={(e) => handleFlashCardClick(e)}>
-					{flashcardPhrase.english
-						? flashcardPhrase.english.en
-						: "NO TRANSLATION"}
-				</FlashcardBack>
-			</ReactCardFlip>
-			{phraseList}
+					<FlashcardBack onClick={(e) => handleFlashCardClick(e)}>
+						{flashcardPhrase.english
+							? flashcardPhrase.english.en
+							: "NO TRANSLATION"}
+					</FlashcardBack>
+				</ReactCardFlip>
+			</FlashcardDiv>
+			<PhraseListContainer>{phraseList}</PhraseListContainer>
 		</PageContainer>
 	);
 }
