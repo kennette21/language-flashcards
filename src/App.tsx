@@ -25,11 +25,20 @@ import Select from "react-select";
  * -x setup translate api
  * -x store translated word objects in Firebase
  * -x fetch and display all translated word objects
- * - make a primate "flashcard"
- * - make a word list when you click a word that word becomes flashcard
+ * -x make a primate "flashcard"
+ * -x make a word list when you click a word that word becomes flashcard
  *
  * Next:
- * - css styling and all that goodnexx
+ * -x css styling and all that goodnexx
+ * ^^ almost did that Mon April 19th :laugh:
+ *
+ * Next-next:
+ * - enter key flips card
+ * - <- ^ -> arrow keys move through words
+ * - add a lesson date when importing words
+ * - mark words as known/unkown
+ * - edit words or translations w/ override field
+ *
  */
 
 firebase.initializeApp({
@@ -134,7 +143,7 @@ const PhraseListContainer = styled.div`
 
 const Phrase = styled.div`
 	font-size: 18px;
-	border: 2px solid rgba(255, 160, 122, 0.479);
+	border: 2px solid rgba(122, 195, 255, 0.479);
 	border-radius: 8px;
 	cursor: pointer;
 `;
