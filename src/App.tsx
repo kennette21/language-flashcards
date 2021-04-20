@@ -8,6 +8,8 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/auth";
 
+import { FaCheckCircle, FaBrain } from "react-icons/fa";
+
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { User } from "./Graphics";
@@ -126,11 +128,17 @@ const FlashcardBack = styled(Flashcard)`
 `;
 
 const IconContainer = styled.div`
-	flex: 1;
 	display: flex;
 	width: 56px;
 	height: 56px;
 	justify-content: flex-end;
+	margin: auto;
+`;
+
+const ActionIconContainer = styled.div`
+	display: flex;
+	width: 50px;
+	height: 50px;
 	margin: auto;
 `;
 
@@ -141,10 +149,18 @@ const PhraseListContainer = styled.div`
 	grid-template-columns: repeat(auto-fit, minmax(200px, 0.5fr));
 `;
 
-const Phrase = styled.div`
+const ActionContainer = styled.div`
+	grid-area: actions;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+`;
+
+const Phrase = styled.div<{ known: boolean }>`
 	font-size: 18px;
-	border: 2px solid rgba(122, 195, 255, 0.479);
+	border: 2px solid ${(props) => (props.known ? "#02bdd6" : "rgb(214, 164, 2)")};,
 	border-radius: 8px;
+	background-color: rgb(2, 189, 214)
 	cursor: pointer;
 `;
 
@@ -163,19 +179,22 @@ function App() {
 }
 
 interface PhraseDoc {
-	hungarian: String;
+	id: string;
+	hungarian: string;
 	english?: {
-		en: String;
+		en: string;
 	};
-	known: Boolean;
+	known: boolean;
 }
 
 const parsePhraseDoc = (
-	hungarian: String,
+	id: string,
+	hungarian: string,
 	known: boolean,
-	english?: { en: String }
+	english?: { en: string }
 ): PhraseDoc => {
 	return {
+		id: id,
 		hungarian: hungarian,
 		known: known,
 		english: english,
@@ -183,6 +202,7 @@ const parsePhraseDoc = (
 };
 
 const emptyPhrase: PhraseDoc = {
+	id: "",
 	hungarian: "",
 	known: false,
 };
@@ -205,7 +225,19 @@ function Page() {
 
 	const handleClickPhrase = (phrase: PhraseDoc) => {
 		setFlashcardFront(true);
-		setFlashcardPhrase(phrase);
+		setTimeout(
+			() => setFlashcardPhrase(phrase),
+			(flashcardPhrase.hungarian || flashcardFront) === "" ? 0 : 250 // todo: redo card flip with css animations :laugh: then we dont need this haack
+		);
+	};
+
+	const handleClickAction = (known: boolean) => {
+		phrasesRef
+			.doc(flashcardPhrase.id)
+			.update({
+				known: known,
+			})
+			.then(() => console.log("successful update of doc"));
 	};
 
 	const phraseList = phrases ? (
@@ -213,10 +245,12 @@ function Page() {
 			<Phrase
 				key={"word-" + indx}
 				onClick={() => {
+					console.log(p.id);
 					handleClickPhrase(
-						parsePhraseDoc(p.hungarian, p.known, p.english)
+						parsePhraseDoc(p.id, p.hungarian, p.known, p.english)
 					);
 				}}
+				known={p.known}
 			>
 				<div>{p.hungarian}</div>
 			</Phrase>
@@ -297,6 +331,14 @@ function Page() {
 					</FlashcardBack>
 				</ReactCardFlip>
 			</FlashcardDiv>
+			<ActionContainer>
+				<ActionIconContainer onClick={() => handleClickAction(true)}>
+					<FaCheckCircle style={{ width: "auto", height: "auto" }} />
+				</ActionIconContainer>
+				<ActionIconContainer onClick={() => handleClickAction(false)}>
+					<FaBrain style={{ width: "auto", height: "auto" }} />
+				</ActionIconContainer>
+			</ActionContainer>
 			<PhraseListContainer>{phraseList}</PhraseListContainer>
 		</PageContainer>
 	);
