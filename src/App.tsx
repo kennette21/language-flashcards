@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import "./App.css";
 
 import styled from "styled-components";
@@ -8,7 +8,13 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/auth";
 
-import { FaCheckCircle, FaBrain } from "react-icons/fa";
+import {
+	FaCheckCircle,
+	FaBrain,
+	FaEdit,
+	FaSave,
+	FaTrash,
+} from "react-icons/fa";
 
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -35,6 +41,7 @@ import Select from "react-select";
  * ^^ almost did that Mon April 19th :laugh:
  *
  * Next-next:
+ * - edit button to fix translations
  * - enter key flips card
  * - <- ^ -> arrow keys move through words
  * - add a lesson date when importing words
@@ -71,6 +78,11 @@ const Flashcard = styled.div`
 const FlashcardDiv = styled.div`
 	grid-area: flashcard;
 	cursor: pointer;
+`;
+
+const FlashcardBack = styled(Flashcard)`
+	background-color: lightblue;
+	position: relative;
 `;
 
 // const FlashcardContainer = styled(ReactCardFlip)`
@@ -123,16 +135,23 @@ const PageContainer = styled.div`
 	grid-template-columns: repeat(7, 1fr);
 `;
 
-const FlashcardBack = styled(Flashcard)`
-	background-color: lightblue;
-`;
-
 const IconContainer = styled.div`
 	display: flex;
 	width: 56px;
 	height: 56px;
 	justify-content: flex-end;
 	margin: auto;
+`;
+
+const EditIconContainer = styled(IconContainer)`
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	align-items: center;
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 5px;
 `;
 
 const ActionIconContainer = styled.div`
@@ -158,9 +177,10 @@ const ActionContainer = styled.div`
 
 const Phrase = styled.div<{ known: boolean }>`
 	font-size: 18px;
-	border: 2px solid ${(props) => (props.known ? "#02bdd6" : "rgb(214, 164, 2)")};,
+	border: 2px solid
+		${(props) => (props.known ? "#02bdd6" : "rgb(214, 164, 2)")};
 	border-radius: 8px;
-	background-color: rgb(2, 189, 214)
+	background-color: rgb(2, 189, 214);
 	cursor: pointer;
 `;
 
@@ -218,8 +238,10 @@ function Page() {
 	const [inputSession, setInputSession] = useState("");
 	const [flashcardPhrase, setFlashcardPhrase] = useState(emptyPhrase);
 	const [flashcardFront, setFlashcardFront] = useState(true);
+	const [isEditingTrans, setIsEditingTrans] = useState(false);
 
 	const phrasesRef = firestore.collection("phrases");
+	const flashcardBackRef = useRef<HTMLDivElement>(null);
 	const query = phrasesRef;
 	const [phrases] = useCollectionData(query, { idField: "id" });
 
@@ -238,6 +260,22 @@ function Page() {
 				known: known,
 			})
 			.then(() => console.log("successful update of doc"));
+	};
+
+	const handleUpdateTranslation = (newTranslation?: string) => {
+		if (newTranslation) {
+			phrasesRef
+				.doc(flashcardPhrase.id)
+				.update({
+					english: {
+						en: newTranslation,
+					},
+				})
+				.then(() => console.log("successfuly saved new trnaslation"));
+			setIsEditingTrans(false);
+		} else {
+			console.error("got undfined new translations!!");
+		}
 	};
 
 	const phraseList = phrases ? (
@@ -286,6 +324,12 @@ function Page() {
 		setFlashcardFront(!flashcardFront);
 	};
 
+	const handleFlashcardKeydown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" && isEditingTrans) {
+			handleUpdateTranslation(flashcardBackRef.current?.innerText);
+		}
+	};
+
 	return (
 		<PageContainer>
 			<Header>
@@ -324,7 +368,30 @@ function Page() {
 						{flashcardPhrase.hungarian}
 					</Flashcard>
 
-					<FlashcardBack onClick={(e) => handleFlashCardClick(e)}>
+					<FlashcardBack
+						contentEditable={isEditingTrans}
+						suppressContentEditableWarning={true}
+						onClick={(e) =>
+							isEditingTrans
+								? console.log("can't flip while editing")
+								: handleFlashCardClick(e)
+						}
+						ref={flashcardBackRef}
+						onKeyDown={handleFlashcardKeydown}
+					>
+						<EditIconContainer
+							onClick={(e) => {
+								e.stopPropagation();
+								if (isEditingTrans) {
+									handleUpdateTranslation(
+										flashcardBackRef.current?.innerText
+									);
+								}
+								setIsEditingTrans(!isEditingTrans);
+							}}
+						>
+							{isEditingTrans ? <FaSave /> : <FaEdit />}
+						</EditIconContainer>
 						{flashcardPhrase.english
 							? flashcardPhrase.english.en
 							: "NO TRANSLATION"}
